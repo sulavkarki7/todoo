@@ -3,7 +3,6 @@ import 'dart:developer';
 
 import 'package:todoo/models/todo_model.dart';
 import 'package:http/http.dart' as http;
-import 'package:todoo/todo/bloc/todo_bloc.dart';
 
 class TodoRepository {
   final String baseUrl = 'https://dummyjson.com/todos/user/5';

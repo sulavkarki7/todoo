@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -18,6 +16,7 @@ class TaskDetailPage extends StatefulWidget {
 }
 
 class _TaskDetailPageState extends State<TaskDetailPage> {
+  // bool isChecked = false;
   @override
   void initState() {
     // TODO: implement initState
@@ -183,15 +182,28 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                             final todo = state.todos[index];
                             return ListTile(
                               title: Text(todo.todo),
-                              leading: IconButton(
-                                  onPressed: () {
-                                    context.read<TodoBloc>().add(
-                                        UpdateTodosEvent(
-                                            todo.id, !todo.completed));
-                                  },
-                                  icon: Icon(todo.completed
-                                      ? Icons.check_box
-                                      : Icons.check_box_outline_blank)),
+                              leading: Checkbox(
+                                value: todo.completed,
+                                onChanged: (bool? value) {
+                                  context
+                                      .read<TodoBloc>()
+                                      .add(UpdateTodosEvent(todo.id, value!));
+                                  // setState(() {
+                                  //   // value = value!;
+                                  //   value = value!;
+                                  //   // todo.completed = value!;
+                                  // });
+                                },
+                              ),
+                              // leading: IconButton(
+                              //     onPressed: () {
+                              //       context.read<TodoBloc>().add(
+                              //           UpdateTodosEvent(
+                              //               todo.id, !todo.completed));
+                              //     },
+                              //     icon: Icon(todo.completed
+                              //         ? Icons.check_box
+                              //         : Icons.check_box_outline_blank)),
                               trailing: IconButton(
                                   onPressed: () {
                                     context

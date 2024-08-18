@@ -1,7 +1,7 @@
 class TodoModel {
   final int id;
   final String todo;
-  final bool completed;
+  late final bool completed;
   final bool? isDeleted;
   final String? deletedOn;
 
