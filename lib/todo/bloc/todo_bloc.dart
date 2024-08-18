@@ -93,11 +93,24 @@ class TodoBloc extends Bloc<TodoEvent, TodoState> {
 
   FutureOr<void> _deleteTodo(
       DeleteTodoEvent event, Emitter<TodoState> emit) async {
-    // try {
-    //   await todoRepository.deleteTodo(event.id);
-    //   emit(TodoDeleted());
-    // } catch (e) {
-    //   emit(TodoError('Failed to delete todo'));
-    // }
+    try {
+      final response = await http.delete(
+        Uri.parse('https://dummyjson.com/todos/${event.id}'),
+      );
+
+      if (response.statusCode == 200) {
+        if (state is TodoLoaded) {
+          final updatedTodos = (state as TodoLoaded)
+              .todos
+              .where((todo) => todo.id != event.id)
+              .toList();
+          emit(TodoLoaded(updatedTodos));
+        }
+      } else {
+        throw Exception('Failed to delete todo');
+      }
+    } catch (e) {
+      emit(TodoError('Failed to delete todo'));
+    }
   }
 }

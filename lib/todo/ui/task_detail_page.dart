@@ -192,7 +192,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                   icon: Icon(todo.completed
                                       ? Icons.check_box
                                       : Icons.check_box_outline_blank)),
-                              trailing: Icon(Icons.delete),
+                              trailing: IconButton(
+                                  onPressed: () {
+                                    context
+                                        .read<TodoBloc>()
+                                        .add(DeleteTodoEvent(todo.id));
+                                  },
+                                  icon: Icon(Icons.delete)),
                             );
                           });
                     } else if (state is TodoError) {
