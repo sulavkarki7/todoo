@@ -24,3 +24,9 @@ class TodoAdded extends TodoState {}
 class TodoUpdated extends TodoState {}
 
 class TodoDeleted extends TodoState {}
+
+class TodoAddedSuccessfully extends TodoState {
+  final TodoModel todo;
+
+  TodoAddedSuccessfully(this.todo);
+}

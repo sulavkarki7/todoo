@@ -17,6 +17,7 @@ class TaskDetailPage extends StatefulWidget {
 
 class _TaskDetailPageState extends State<TaskDetailPage> {
   // bool isChecked = false;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -216,8 +217,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     } else if (state is TodoError) {
                       return Center(child: Text(state.message));
                     }
-                    return const Center(
-                      child: Text('Press the button to load todos'),
+                    return Center(
+                      child: Text(
+                        'Press the button to load todos',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                     );
                   },
                 ),

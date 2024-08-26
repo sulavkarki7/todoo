@@ -19,7 +19,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => TodoBloc(),
-      child: const GetMaterialApp(
+      child: GetMaterialApp(
+        theme: ThemeData.dark(useMaterial3: true),
         debugShowCheckedModeBanner: false,
         home: WelcomePage(),
       ),
