@@ -25,3 +25,7 @@ class DeleteTodoEvent extends TodoEvent {
 
   DeleteTodoEvent(this.id);
 }
+
+class ClearCompletedTodosEvent extends TodoEvent {}
+
+class ToggleAllTodosEvent extends TodoEvent {}

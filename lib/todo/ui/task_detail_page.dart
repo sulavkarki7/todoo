@@ -218,10 +218,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                       return Center(child: Text(state.message));
                     }
                     return Center(
-                      child: Text(
-                        'Press the button to load todos',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Press the button to load todos',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     );
                   },
