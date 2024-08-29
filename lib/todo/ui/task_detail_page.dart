@@ -175,6 +175,10 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     if (state is TodoLoading) {
                       return const Center(child: CircularProgressIndicator());
                     } else if (state is TodoLoaded) {
+                      double completionPercentage =
+                          _getCompletionPercentage(state.todos);
+                      _buildProgressIndicator(completionPercentage);
+
                       return ListView.builder(
                           itemCount: state.todos.length,
                           shrinkWrap: true,
@@ -250,4 +254,21 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           )),
     );
   }
+}
+
+double _getCompletionPercentage(List<TodoModel> todos) {
+  if (todos.isEmpty) return 0;
+  int completedTasks = todos.where((todo) => todo.completed).length;
+  return (completedTasks / todos.length) * 100;
+}
+
+Widget _buildProgressIndicator(double completionPercentage) {
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: LinearProgressIndicator(
+      value: completionPercentage / 100,
+      backgroundColor: Colors.grey[300],
+      color: Colors.green,
+    ),
+  );
 }
