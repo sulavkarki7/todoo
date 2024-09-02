@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:todoo/constants/constants.dart';
 import 'package:todoo/models/task_list.dart';
 import 'package:todoo/models/todo_model.dart';
@@ -16,11 +15,12 @@ class TaskDetailPage extends StatefulWidget {
 }
 
 class _TaskDetailPageState extends State<TaskDetailPage> {
-  // bool isChecked = false;
+  String searchQuery = '';
+  bool showCompletedOnly = false;
+  bool showPendingOnly = false;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     context.read<TodoBloc>().add(FetchTodosEvent());
   }
@@ -118,157 +118,266 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
+  void _onSearchChanged(String value) {
+    setState(() {
+      searchQuery = value;
+    });
+  }
+
+  void _toggleShowCompletedOnly() {
+    setState(() {
+      showCompletedOnly = !showCompletedOnly;
+      showPendingOnly = false;
+    });
+  }
+
+  void _toggleShowPendingOnly() {
+    setState(() {
+      showPendingOnly = !showPendingOnly;
+      showCompletedOnly = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(110),
         child: AppBar(
-          // toolbarHeight: 150,
           shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(100),
-                  bottomRight: Radius.circular(100))),
-          // flexibleSpace: Container(
-          //   decoration: const BoxDecoration(
-          //     borderRadius: BorderRadius.only(
-          //       bottomLeft: Radius.circular(100),
-          //       bottomRight: Radius.circular(100),
-          //     ),
-          //     color: Colors.yellow,
-          //   ),
-          // ),
-          actions: [
-            const Padding(
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(100),
+              bottomRight: Radius.circular(100),
+            ),
+          ),
+          actions: const [
+            Padding(
               padding: EdgeInsets.all(8.0),
               child: Icon(Icons.more_vert),
             )
           ],
           surfaceTintColor: Colors.yellow,
           backgroundColor: Colors.yellow,
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10.0, 5, 0, 0),
-                child: ListTile(
-                  leading:
-                      Icon(widget.task.icon, size: 40, color: Colors.black45),
-                  title: Text(
-                    widget.task.description,
-                    style: subtitleStyle,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(50),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: TextField(
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Search Todos...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
                   ),
-                  subtitle: Text(
-                    widget.task.title,
-                    style: titleStyle,
-                  ),
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20.0),
-                child: BlocBuilder<TodoBloc, TodoState>(
-                  builder: (context, state) {
-                    if (state is TodoLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (state is TodoLoaded) {
-                      double completionPercentage =
-                          _getCompletionPercentage(state.todos);
-                      _buildProgressIndicator(completionPercentage);
+            ),
+          ),
+        ),
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          context.read<TodoBloc>().add(FetchTodosEvent());
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10.0, 5, 0, 0),
+                  child: ListTile(
+                    leading:
+                        Icon(widget.task.icon, size: 40, color: Colors.black45),
+                    title: Text(
+                      widget.task.description,
+                      style: subtitleStyle,
+                    ),
+                    subtitle: Text(
+                      widget.task.title,
+                      style: titleStyle,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: BlocBuilder<TodoBloc, TodoState>(
+                    builder: (context, state) {
+                      if (state is TodoLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (state is TodoLoaded) {
+                        var todos = state.todos;
 
-                      return ListView.builder(
-                          itemCount: state.todos.length,
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            final todo = state.todos[index];
-                            return ListTile(
-                              title: Text(todo.todo),
-                              leading: Checkbox(
-                                value: todo.completed,
-                                onChanged: (bool? value) {
-                                  context
-                                      .read<TodoBloc>()
-                                      .add(UpdateTodosEvent(todo.id, value!));
-                                  // setState(() {
-                                  //   // value = value!;
-                                  //   value = value!;
-                                  //   // todo.completed = value!;
-                                  // });
-                                },
+                        if (searchQuery.isNotEmpty) {
+                          todos = todos
+                              .where((todo) => todo.todo
+                                  .toLowerCase()
+                                  .contains(searchQuery.toLowerCase()))
+                              .toList();
+                        }
+
+                        if (showCompletedOnly) {
+                          todos =
+                              todos.where((todo) => todo.completed).toList();
+                        } else if (showPendingOnly) {
+                          todos =
+                              todos.where((todo) => !todo.completed).toList();
+                        }
+
+                        double completionPercentage =
+                            _getCompletionPercentage(todos);
+                        _buildProgressIndicator(completionPercentage);
+
+                        return Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  FilterChip(
+                                    label: const Text('All'),
+                                    selected:
+                                        !showCompletedOnly && !showPendingOnly,
+                                    onSelected: (bool selected) {
+                                      setState(() {
+                                        showCompletedOnly = false;
+                                        showPendingOnly = false;
+                                      });
+                                    },
+                                  ),
+                                  FilterChip(
+                                    label: const Text('Completed'),
+                                    selected: showCompletedOnly,
+                                    onSelected: (bool selected) {
+                                      _toggleShowCompletedOnly();
+                                    },
+                                  ),
+                                  FilterChip(
+                                    label: const Text('Pending'),
+                                    selected: showPendingOnly,
+                                    onSelected: (bool selected) {
+                                      _toggleShowPendingOnly();
+                                    },
+                                  ),
+                                ],
                               ),
-                              // leading: IconButton(
-                              //     onPressed: () {
-                              //       context.read<TodoBloc>().add(
-                              //           UpdateTodosEvent(
-                              //               todo.id, !todo.completed));
-                              //     },
-                              //     icon: Icon(todo.completed
-                              //         ? Icons.check_box
-                              //         : Icons.check_box_outline_blank)),
-                              trailing: IconButton(
-                                  onPressed: () {
-                                    context
-                                        .read<TodoBloc>()
-                                        .add(DeleteTodoEvent(todo.id));
-                                  },
-                                  icon: Icon(Icons.delete)),
-                            );
-                          });
-                    } else if (state is TodoError) {
-                      return Center(child: Text(state.message));
-                    }
-                    return Center(
-                      child: Align(
-                        alignment: Alignment.center,
+                            ),
+                            ListView.builder(
+                              itemCount: todos.length,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                final todo = todos[index];
+                                return ListTile(
+                                  title: Text(todo.todo),
+                                  leading: Checkbox(
+                                    value: todo.completed,
+                                    onChanged: (bool? value) {
+                                      context.read<TodoBloc>().add(
+                                          UpdateTodosEvent(todo.id, value!));
+                                    },
+                                  ),
+                                  trailing: IconButton(
+                                    onPressed: () {
+                                      context
+                                          .read<TodoBloc>()
+                                          .add(DeleteTodoEvent(todo.id));
+                                    },
+                                    icon: const Icon(Icons.delete),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      } else if (state is TodoError) {
+                        return Center(child: Text(state.message));
+                      }
+                      return const Center(
                         child: Text(
                           'Press the button to load todos',
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              )
-            ],
+                      );
+                    },
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-          elevation: 5,
-          backgroundColor: Colors.green.shade400,
-          onPressed: () {
-            showAddTodoDialog(context);
+        elevation: 5,
+        backgroundColor: Colors.green.shade400,
+        onPressed: () {
+          showAddTodoDialog(context);
+        },
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: PopupMenuButton<String>(
+          onSelected: (String result) {
+            if (result == 'Add Task') {
+              showAddTodoDialog(context);
+            } else if (result == 'Clear Completed') {
+              // Add clear completed logic here
+            }
           },
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 35,
-          )),
+          icon: const Icon(Icons.add),
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            const PopupMenuItem<String>(
+              value: 'Add Task',
+              child: Text('Add Task'),
+            ),
+            const PopupMenuItem<String>(
+              value: 'Clear Completed',
+              child: Text('Clear Completed Tasks'),
+            ),
+          ],
+        ),
+      ),
     );
   }
-}
 
-double _getCompletionPercentage(List<TodoModel> todos) {
-  if (todos.isEmpty) return 0;
-  int completedTasks = todos.where((todo) => todo.completed).length;
-  return (completedTasks / todos.length) * 100;
-}
+  double _getCompletionPercentage(List<TodoModel> todos) {
+    if (todos.isEmpty) {
+      return 0.0;
+    }
+    int completedTasks = todos.where((todo) => todo.completed).length;
+    return (completedTasks / todos.length) * 100;
+  }
 
-Widget _buildProgressIndicator(double completionPercentage) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: LinearProgressIndicator(
-      value: completionPercentage / 100,
-      backgroundColor: Colors.grey[300],
-      color: Colors.green,
-    ),
-  );
+  Widget _buildProgressIndicator(double completionPercentage) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Column(
+        children: [
+          LinearProgressIndicator(
+            value: completionPercentage / 100,
+            backgroundColor: Colors.grey.shade300,
+            color: Colors.green.shade400,
+            minHeight: 10,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '${completionPercentage.toStringAsFixed(1)}% Completed',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.green.shade600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
