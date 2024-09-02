@@ -7,7 +7,7 @@ import 'package:todoo/models/todo_model.dart';
 import 'package:todoo/todo/bloc/todo_bloc.dart';
 
 class TaskDetailPage extends StatefulWidget {
-  TaskDetailPage({super.key, required this.task});
+  const TaskDetailPage({super.key, required this.task});
 
   final Task task;
 
